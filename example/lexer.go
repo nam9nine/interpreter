@@ -1,63 +1,97 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/nam9nine/interpreter/token"
+)
 
-func LexerExample() {
-	input := "let ajjjj = 5;"
-
-	for i := 0; i < len(input); i++ {
-		l := input[i]
-		switch l {
-		case '}':
-			{
-				fmt.Println('}')
-
-			}
-		case '{':
-			fmt.Println('{')
-		case ';':
-			fmt.Println(';')
-		case '(':
-			fmt.Println('(')
-		case ')':
-			fmt.Println(')')
-		case '+':
-			fmt.Println('+')
-		case '=':
-			fmt.Println('=')
-		case 0x20:
-			continue
-		default:
-
-			i = wordParse(input, i)
-		}
+func LexerExample(t token.Token, input string, i int) (int, token.Token) {
+	switch l := input[i]; l {
+	case '}':
+		i++
+	case '{':
+		i++
+	case ';':
+		i++
+		t.Type = token.SEMICOLON
+		t.Literal = ";"
+	case '(':
+		t.Type = token.LPAREN
+		t.Literal = "("
+		i++
+	case ')':
+		t.Type = token.RPAREN
+		t.Literal = ")"
+		i++
+	case '+':
+		t.Type = token.PLUS
+		t.Literal = "+"
+		i++
+	case '=':
+		t.Type = token.ASSIGN
+		t.Literal = "="
+		i++
+	case 0x20:
+		i++
+	default:
+		i, t = wordParse(t, input, i)
 
 	}
+	return i, t
 }
 
-func wordParse(input string, ir int) int {
-
+func wordParse(t token.Token, input string, ir int) (int, token.Token) {
 	var word []byte
-	var start = ir
-	for isWord(input[start]) {
-		word = append(word, input[start])
-		start = start + 1
+	var tokenT token.TokenType
+
+	for ; ir < len(input); ir++ {
+		if isInt(input[ir]) {
+			word = append(word, input[ir])
+			tokenT = token.INT
+		} else {
+			break
+		}
 	}
+
+	for ; ir < len(input); ir++ {
+		if isWord(input[ir]) {
+			word = append(word, input[ir])
+			tokenT = token.IDENT
+		} else {
+			break
+		}
+	}
+
 	switch w := string(word); w {
 	case "let":
-		fmt.Println("let")
+		t.Type = token.LET
+		t.Literal = "LET"
 	case "fn":
-		fmt.Println("fn")
+		t.Type = token.FUNCTION
+		t.Literal = "fn"
 	default:
-		fmt.Println(w)
+		t.Type = tokenT
+		t.Literal = string(w)
 	}
-	return start
+	return ir, t
 }
 
 func isWord(l byte) bool {
 	return l >= 'A' && l <= 'Z' || l >= 'a' && l <= 'z'
 }
 
+func isInt(l byte) bool {
+	return l >= '0' && l <= '9'
+}
+
 func main() {
-	LexerExample()
+	input := "let a = 5858;"
+	var t token.Token
+	var i int = 0
+	for i < len(input) {
+		i, t = LexerExample(t, input, i)
+		fmt.Println("type : ", t.Type)
+		fmt.Println("literal : ", t.Literal)
+		fmt.Println()
+	}
 }

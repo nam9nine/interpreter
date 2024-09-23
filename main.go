@@ -1,1 +1,5 @@
-package interpreter
+package main
+
+func main() {
+
+}

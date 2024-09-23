@@ -16,8 +16,4 @@ func TestNextToken(t *testing.T) {
 		{token.PLUS, "+"},
 		{token.LPAREN, "("},
 	}
-	for i, v := range tests {
-		var t token.Token
-
-	}
 }

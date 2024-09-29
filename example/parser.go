@@ -5,7 +5,6 @@ import (
 	"github.com/nam9nine/interpreter/lexer"
 	"github.com/nam9nine/interpreter/parser"
 	"github.com/nam9nine/interpreter/token"
-	"os"
 )
 
 func parserLetStatementV1() {
@@ -13,26 +12,37 @@ func parserLetStatementV1() {
 let a = 5;
 `
 	l := lexer.New(input)
+	p := parser.New(l)
 	tok := token.Token{
 		Literal: "let",
 		Type:    token.LET,
 	}
-	st, err := parser.ParseLetStatement(tok, l)
-	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
-	}
+	st := p.ParseLetStatement(tok)
 
 	fmt.Printf("%v\n", *st.Name)
 }
 
 func parseProgramV1() {
 	input := `
-let a = 5;
+let a = 5; 
+let b = fun(1, 3);
 `
 	l := lexer.New(input)
-	sts := parser.ParseProgram(l)
+	p := parser.New(l)
+	sts := p.ParseProgram()
 	for _, v := range sts {
-		fmt.Printf("%+v\n", v.TokenLiteral())
+
+		if v == nil {
+			fmt.Println("존재하지 않는 예약어")
+			return
+		}
+
+		if v.TokenLiteral() == "let" {
+			fmt.Printf("let 예약어 발견 : %+v\n", v.TokenLiteral())
+		} else {
+			fmt.Println("다른 예약어 발견")
+		}
+
 	}
 }
 

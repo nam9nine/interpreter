@@ -40,12 +40,11 @@ let a = 5;
 
 	l := lexer.New(input)
 	l.NextToken()
-	letState, err := ParseLetStatement(tok, l)
-	if err != nil {
-		t.Fatal(err)
-	} else {
-		if letState.Name.Value != test.expectedName.Value {
-			t.Fatalf("expected : %+v got : %+v", test.expectedName.Value, letState.Name.Value)
-		}
+	p := New(l)
+	letState := p.ParseLetStatement(tok)
+
+	if letState.Name.Value != test.expectedName.Value {
+		t.Fatalf("expected : %+v got : %+v", test.expectedName.Value, letState.Name.Value)
 	}
+
 }

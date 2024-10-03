@@ -1,82 +1,109 @@
 package parser
 
 import (
-	"errors"
+	"fmt"
 	"github.com/nam9nine/interpreter/ast"
 	"github.com/nam9nine/interpreter/lexer"
 	"github.com/nam9nine/interpreter/token"
 )
 
 type Parser struct {
-	lex *lexer.Lexer
-	err []error
+	lex         *lexer.Lexer
+	curToken    token.Token
+	errMessages []string
 }
 
 func New(l *lexer.Lexer) *Parser {
 	return &Parser{
-		lex: l,
-		err: []error{},
+		lex:         l,
+		curToken:    l.NextToken(),
+		errMessages: []string{},
 	}
 }
 
-func (p *Parser) ParseProgram() []ast.Statement {
-	statements := []ast.Statement{}
+func (p *Parser) NextToken() token.Token {
+	tok := p.lex.NextToken()
+	p.curToken = tok
+	return p.curToken
+}
 
-	for t := p.lex.NextToken(); t.Type != token.EOF; t = p.lex.NextToken() {
-		st := p.ParseStatement(t)
-		statements = append(statements, st)
+// 반환값 program 구조체 추가
+func (p *Parser) ParseProgram() []ast.Statement {
+	// 나중에 Program 구조체로 재정의해야됨
+	var statements []ast.Statement
+
+	for p.curToken.Type != token.EOF {
+		st := p.ParseStatement()
+		if st != nil {
+			statements = append(statements, st)
+		}
+		p.NextToken()
 	}
 	return statements
 }
 
-func (p *Parser) ParseStatement(tok token.Token) ast.Statement {
+func (p *Parser) ParseStatement() ast.Statement {
 	var statement ast.Statement
 
-	tp := tok.Type
+	tp := p.curToken.Type
 	switch tp {
 	case token.LET:
-		statement = p.ParseLetStatement(tok)
+		statement = p.ParseLetStatement()
+		if t, ok := statement.(*ast.LetStatement); ok {
+			if t == nil {
+				return nil
+			}
+		}
 	case token.RETURN:
-		statement = ParseReturnStatement()
+		statement = p.ParseReturnStatement()
+		if t, ok := statement.(*ast.ReturnStatement); ok {
+			if t == nil {
+				return nil
+			}
+		}
 	default:
 		return nil
 	}
 	return statement
 }
 
-func (p *Parser) ParseLetStatement(tok token.Token) *ast.LetStatement {
-	letState := new(ast.LetStatement)
-	identi := new(ast.Identifier)
-
-	letState.Token = tok
-
-	if t := p.lex.NextToken(); t.Type == token.IDENT {
-		identi.Value = t.Literal
-		identi.Token = t
-		letState.Name = identi
+func (p *Parser) ParseLetStatement() *ast.LetStatement {
+	stmt := &ast.LetStatement{Token: p.curToken}
+	if !p.expectPeek(token.IDENT) {
+		return nil
 	} else {
-		p.err = append(p.err, errors.New("식별자 없음"))
+		// let AST에 식별자 추가
+		stmt.Name = &ast.Identifier{
+			Token: p.curToken,
+			Value: p.curToken.Literal,
+		}
 	}
 
-	if t := p.lex.NextToken(); t.Type == token.ASSIGN {
-	} else {
-		p.err = append(p.err, errors.New("할당 연산자 없음"))
+	if !p.expectPeek(token.ASSIGN) {
+		return nil
 	}
-
-	if t := p.lex.NextToken(); t.Type == token.INT {
-
-	} else {
-		p.err = append(p.err, errors.New("정수 없음"))
+	//표현식 건너뛰기 - 미완성
+	for p.curToken.Type != token.SEMICOLON {
+		p.NextToken()
 	}
-
-	if t := p.lex.NextToken(); t.Type == token.SEMICOLON {
-	} else {
-		p.err = append(p.err, errors.New("세미콜론 없음"))
-	}
-	return letState
+	return stmt
 }
 
-func ParseReturnStatement() *ast.ReTurnStatement {
-	var reState = &ast.ReTurnStatement{}
-	return reState
+func (p *Parser) ParseReturnStatement() *ast.ReturnStatement {
+	var stmt = &ast.ReturnStatement{}
+	return stmt
+}
+
+func (p *Parser) expectPeek(tType token.TokenType) bool {
+	tok := p.NextToken()
+	if tok.Type != tType {
+		p.errMessages = append(p.errMessages,
+			fmt.Sprintf("parser error: expected type: %v, Got: %v", tType, tok.Type))
+		return false
+	}
+	return true
+}
+
+func (p *Parser) Errors() []string {
+	return p.errMessages
 }

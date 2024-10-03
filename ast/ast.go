@@ -28,22 +28,29 @@ type LetStatement struct {
 	Value Expression
 }
 
-func (l *LetStatement) statementNode() {
+func (i *Identifier) TokenLiteral() string {
+	return i.Token.Literal
 }
 
+func (i *Identifier) expressionNode() {
+
+}
+
+func (l *LetStatement) statementNode() {
+}
 func (l *LetStatement) TokenLiteral() string {
 	return l.Token.Literal
 }
 
-type ReTurnStatement struct {
-	Token token.Token
-	Value Expression
+type ReturnStatement struct {
+	Token       token.Token
+	ReturnValue Expression
 }
 
-func (r *ReTurnStatement) statementNode() {
+func (r *ReturnStatement) statementNode() {
 
 }
 
-func (r *ReTurnStatement) TokenLiteral() string {
+func (r *ReturnStatement) TokenLiteral() string {
 	return r.Token.Literal
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/nam9nine/interpreter/lexer"
 	"github.com/nam9nine/interpreter/parser"
-	"github.com/nam9nine/interpreter/token"
 )
 
 func parserLetStatementV1() {
@@ -13,11 +12,8 @@ let a = 5;
 `
 	l := lexer.New(input)
 	p := parser.New(l)
-	tok := token.Token{
-		Literal: "let",
-		Type:    token.LET,
-	}
-	st := p.ParseLetStatement(tok)
+
+	st := p.ParseLetStatement()
 
 	fmt.Printf("%v\n", *st.Name)
 }
